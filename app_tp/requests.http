@@ -1,0 +1,139 @@
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+####################################
+# AUTH
+####################################
+
+### Register ADMIN candidate (note: selon ton implémentation, admin auto-whitelisted seulement si role=ADMIN à la création)
+# @name registerAdmin
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@example.com",
+  "password": "ChangeMe321!",
+  "firstName": "Nathan",
+  "lastName": "Admin"
+}
+
+### Register STUDENT (par défaut non whitelisté)
+# @name registerStudent
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "student1@example.com",
+  "password": "ChangeMe123!",
+  "firstName": "Alice",
+  "lastName": "Martin"
+}
+
+### Login STUDENT (doit échouer si non whitelisté)
+# @name studentLoginFail
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "student1@example.com",
+  "password": "ChangeMe123!"
+}
+
+### Login ADMIN
+# @name adminLogin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@example.com",
+  "password": "ChangeMe321!"
+}
+
+### Me (admin session)
+GET {{baseUrl}}/auth/me
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+### Logout (admin session)
+POST {{baseUrl}}/auth/logout
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+####################################
+# USERS (ADMIN)
+####################################
+
+### List users
+GET {{baseUrl}}/users?page=1&limit=10
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+### User detail
+GET {{baseUrl}}/users/1
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+### Update user profile
+PATCH {{baseUrl}}/users/1
+Content-Type: {{contentType}}
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+{
+  "firstName": "AliceUpdated",
+  "lastName": "MartinUpdated"
+}
+
+### Change user role
+PATCH {{baseUrl}}/users/1/role
+Content-Type: {{contentType}}
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+{
+  "role": "LIBRARIAN"
+}
+
+### Whitelist user ON
+PATCH {{baseUrl}}/users/1/whitelist
+Content-Type: {{contentType}}
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+{
+  "whitelisted": true
+}
+
+### Login STUDENT (après whitelist) => doit réussir
+# @name studentLogin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "student1@example.com",
+  "password": "ChangeMe123!"
+}
+
+### Me (student session)
+GET {{baseUrl}}/auth/me
+Cookie: {{studentLogin.response.headers.set-cookie}}
+
+### Delete user (attention: éviter de delete user 1 si c’est ton admin)
+DELETE {{baseUrl}}/users/999
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+# Les endpoints ne sont pas encore prêts, mais voici l'exemple des routes.
+
+####################################
+# BOOKS (PUBLIC + LIBRARIAN/ADMIN)
+####################################
+
+### Get books (public)
+GET {{baseUrl}}/books?page=1&limit=10&sortBy=title&order=ASC
+
+### Create book (librarian/admin)
+POST {{baseUrl}}/books
+Content-Type: {{contentType}}
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+{
+  "isbn": "9780132350884",
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "publisher": "Prentice Hall",
+  "publishedYear": 2008,
+  "totalCopies": 3
+}
