@@ -1,65 +1,54 @@
 # TP TypeScript NW
 
-## Objectif
-Mettre en place une API REST pour la gestion d'une bibliotheque avec authentification par session, controle des roles et audit des actions.
+API REST de gestion de bibliotheque (NestJS + TypeORM + SQLite) avec authentification par session et gestion des roles.
 
-## Stack technique
-- NestJS (API REST)
-- TypeORM + SQLite
-- Sessions serveur (express-session)
-- Validation et serialization (class-validator, class-transformer)
-- Hash des mots de passe (bcrypt)
-- RBAC : STUDENT / LIBRARIAN / ADMIN
+Enonce: `app_tp/EVAL_API_REST_NESTJS.md`
 
-## Initialisation du projet
-### Dependances principales
-- ORM et base de donnees : TypeORM + SQLite
-- Gestion des sessions serveur
-- Validation des entrees et serialization des sorties
-- Securite des mots de passe
-- Configuration via variables d'environnement
+## Fonctionnalites presentes
+- Authentification: inscription, connexion, deconnexion, `me`
+- Session serveur avec persistance SQLite
+- Gestion utilisateurs (ADMIN):
+  - liste + detail
+  - modifier profil
+  - changer role
+  - whitelist on/off (avec regles)
+  - suppression
+- Modeles TypeORM complets: User, Book, Borrowing, Reservation, Review, ActivityLog, Session
+- Enums metier: roles, statut emprunt, statut reservation, types d'activite
+- Validation globale active (ValidationPipe)
 
-## Architecture modulaire
-Modules metier :
-- auth : inscription, connexion, deconnexion, session
-- users : gestion des utilisateurs (ADMIN)
-- books : catalogue de livres
-- borrowings : gestion des emprunts
-- reservations : reservations et file d'attente
-- reviews : avis utilisateurs
-- stats : statistiques selon les roles
-- export : export des donnees (ADMIN)
-- activity-log : audit des actions
-- common : guards, decorators, pagination, enums
+## A faire (reste du sujet)
+- CRUD livres + gestion des exemplaires
+- Emprunts (creation, retour, retard)
+- Reservations (creation, annulation, satisfaction)
+- Avis (creation, modification, suppression)
+- Statistiques par role
+- Export des donnees (ADMIN)
+- Historique d'activite automatique
+- Guards roles/session sur toutes les routes
+- requests.http complet + exemples finaux
 
-## Modele de donnees
-Entites TypeORM :
-- User
-- Book
-- Borrowing
-- Reservation
-- Review
-- ActivityLog
+## Lancer le projet
+Depuis `app_tp`:
 
-## Validation et securite
-- DTOs pour toutes les routes principales
-- Guards pour la session et les roles
-- Decorators personnalises (@Roles, @CurrentUser)
-- Enums globaux pour les roles, statuts et types d'actions
+```bash
+npm install
+npm run start:dev
+```
 
-## Tests unitaires
-Generation des tests unitaires pour les services principaux :
-- auth
-- users
-- books
-- borrowings
-- reservations
+## Variables d'environnement
+Exemple minimal:
 
-Note : les fichiers de tests ont ete generes via `nest g service <module> --spec` suite a une erreur avec la commande `nest g spec`.
+```env
+NODE_ENV=development
+PORT=3000
+DB_PATH=./db.sqlite
+SESSION_SECRET=change_me_dev_secret
+SESSION_NAME=sid
+SESSION_TTL_SECONDS=86400
+```
 
-## Configuration a finaliser
-- TypeORM SQLite
-- Sessions
-- Validation globale
-- Serialization des reponses (exclusion du mot de passe)
-- Documentation des endpoints et exemples de requetes
+## Tests rapides
+- Auth: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`
+- Admin users: `GET /users`, `PATCH /users/:id/role`, `PATCH /users/:id/whitelist`
+- Fichier de requetes: `app_tp/requests.http`
