@@ -1,7 +1,7 @@
 import { BorrowingStatusEnum } from './borrowing-status.enum';
 
 describe('BorrowingStatusEnum', () => {
-  it('should be defined', () => {
-    expect(new BorrowingStatusEnum()).toBeDefined();
+  it('should expose known statuses', () => {
+    expect(BorrowingStatusEnum.ACTIVE).toBe('ACTIVE');
   });
 });

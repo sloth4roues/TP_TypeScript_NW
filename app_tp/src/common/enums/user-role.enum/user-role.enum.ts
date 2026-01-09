@@ -1,1 +1,5 @@
-export class UserRoleEnum {}
+export enum UserRoleEnum {
+  STUDENT = 'STUDENT',
+  LIBRARIAN = 'LIBRARIAN',
+  ADMIN = 'ADMIN',
+}

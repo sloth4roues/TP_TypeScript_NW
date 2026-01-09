@@ -16,6 +16,7 @@ Enonce: `app_tp/EVAL_API_REST_NESTJS.md`
 - Modeles TypeORM complets: User, Book, Borrowing, Reservation, Review, ActivityLog, Session
 - Enums metier: roles, statut emprunt, statut reservation, types d'activite
 - Validation globale active (ValidationPipe)
+- RBAC actif sur les routes sensibles existantes (auth `me/logout`, toutes routes `users`)
 
 ## A faire (reste du sujet)
 - CRUD livres + gestion des exemplaires
@@ -48,7 +49,39 @@ SESSION_NAME=sid
 SESSION_TTL_SECONDS=86400
 ```
 
+## Sessions (details)
+- Cookie: `sid`
+- Stockage: table `sessions` (SQLite)
+- TTL par defaut: 86400s (24h)
+- Logout: suppression logique (soft delete) dans `sessions`
+
+## Whitelist (regles)
+- Un utilisateur non whitelisté ne peut pas se connecter
+- Seul un ADMIN peut modifier la whitelist
+- Un ADMIN ne peut pas se retirer lui-meme de la whitelist
+- Un ADMIN ne peut pas etre retiré de la whitelist
+
+## Endpoints exposes (etat actuel)
+- Auth: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`
+- Users (ADMIN): `GET /users`, `GET /users/:id`, `PATCH /users/:id`, `PATCH /users/:id/role`, `PATCH /users/:id/whitelist`, `DELETE /users/:id`
+
+## Endpoints a venir (selon l'enonce)
+- Books, Borrowings, Reservations, Reviews
+- Stats, Export, Activity-log
+
+## Donnees retournees
+- Les reponses utilisateurs ne contiennent jamais le mot de passe
+
+## Fichier de requetes
+- Tests manuels: `app_tp/requests.http`
+
 ## Tests rapides
 - Auth: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`
 - Admin users: `GET /users`, `PATCH /users/:id/role`, `PATCH /users/:id/whitelist`
 - Fichier de requetes: `app_tp/requests.http`
+
+## RBAC (etat actuel)
+- Public: aucun endpoint public expose pour l'instant
+- Session requise: `GET /auth/me`, `POST /auth/logout`
+- ADMIN requis: toutes les routes `users` (`GET /users`, `GET /users/:id`, `PATCH /users/:id`, `PATCH /users/:id/role`, `PATCH /users/:id/whitelist`, `DELETE /users/:id`)
+- En attente: RBAC sur `books`, `borrowings`, `reservations`, `reviews`, `stats`, `export`, `activity-log` (controllers a remplir)
