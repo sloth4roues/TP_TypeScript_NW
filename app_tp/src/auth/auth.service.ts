@@ -1,4 +1,5 @@
 import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -12,6 +13,7 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -24,13 +26,19 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const bootstrapAdminEmail =
+      this.configService.get<string>('BOOTSTRAP_ADMIN_EMAIL')?.trim().toLowerCase() ??
+      'admin@example.com';
+    const isBootstrapAdmin = normalizedEmail === bootstrapAdminEmail;
+
     const user = this.usersRepository.create({
-      email: dto.email,
+      email: normalizedEmail,
       password: hashedPassword,
       firstName: dto.firstName,
       lastName: dto.lastName,
-      role: UserRoleEnum.STUDENT,
-      whitelisted: false,
+      role: isBootstrapAdmin ? UserRoleEnum.ADMIN : UserRoleEnum.STUDENT,
+      whitelisted: isBootstrapAdmin,
     });
 
     const saved = await this.usersRepository.save(user);

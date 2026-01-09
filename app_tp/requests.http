@@ -1,23 +1,28 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 
-####################################
-# AUTH
-####################################
+# Fichier requests, afin de tester tous les endpoints.
+# Numéroté dans l'ordre d'exécution des tests.
 
-### Register ADMIN candidate (note: selon ton implémentation, admin auto-whitelisted seulement si role=ADMIN à la création)
+# AUTH
+
+# Dans cet exemple, notre utilisateur 1 sera ADMIN, et l'utilisateur 2 sera STUDENT.
+
+#1. On créer un utilisateur ADMIN, il faut saisir strictement l'email présent dans le .env pour que l'utilisateur soit admin ET whitelisté à sa création.
+### Register ADMIN
 # @name registerAdmin
 POST {{baseUrl}}/auth/register
 Content-Type: {{contentType}}
 
 {
-  "email": "admin@example.com",
-  "password": "ChangeMe321!",
+  "email": "adimin@example.com",
+  "password": "ChangeMoi123!",
   "firstName": "Nathan",
   "lastName": "Admin"
 }
 
-### Register STUDENT (par défaut non whitelisté)
+##2. On créer un utilisateur STUDENT, par défaut non admin et non whitelisté.
+### Register STUDENT (par défaut non admin et non whitelisté)
 # @name registerStudent
 POST {{baseUrl}}/auth/register
 Content-Type: {{contentType}}
@@ -29,7 +34,8 @@ Content-Type: {{contentType}}
   "lastName": "Martin"
 }
 
-### Login STUDENT (doit échouer si non whitelisté)
+# 3. On tente de se logguer avec l'utilisateur STUDENT, cela doit échouer car non whitelisté.
+### Login STUDENT doit échouer (non whitelisté)
 # @name studentLoginFail
 POST {{baseUrl}}/auth/login
 Content-Type: {{contentType}}
@@ -39,38 +45,54 @@ Content-Type: {{contentType}}
   "password": "ChangeMe123!"
 }
 
-### Login ADMIN
+# 4. On se loggue avec l'utilisateur ADMIN, cela doit réussir.
+### Login ADMIN (fonctionne car admin est whitelisté par défaut)
 # @name adminLogin
 POST {{baseUrl}}/auth/login
 Content-Type: {{contentType}}
 
 {
-  "email": "admin@example.com",
-  "password": "ChangeMe321!"
+  "email": "adimin@example.com",
+  "password": "ChangeMoi123!"
 }
 
+# 5. On utilise le cookie de session retourné pour faire des requêtes authentifiées.
 ### Me (admin session)
 GET {{baseUrl}}/auth/me
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
+# 6. On se déloggue.
 ### Logout (admin session)
 POST {{baseUrl}}/auth/logout
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
-####################################
-# USERS (ADMIN)
-####################################
+#6.5. On se reloggue avec l'utilisateur ADMIN pour la suite des tests.
+### Reconnexion ADMIN - Comme le 4.
+# @name adminLogin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
 
+{
+  "email": "adimin@example.com",
+  "password": "ChangeMoi123!"
+}
+
+
+# USERS (ADMIN)
+
+# 7. En tant qu'ADMIN, on peut gérer les utilisateurs.
 ### List users
 GET {{baseUrl}}/users?page=1&limit=10
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
+# 8. On peut voir le détail d’un utilisateur.
 ### User detail
-GET {{baseUrl}}/users/1
+GET {{baseUrl}}/users/2
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
+# 9. On peut modifier le profil d’un utilisateur.
 ### Update user profile
-PATCH {{baseUrl}}/users/1
+PATCH {{baseUrl}}/users/2
 Content-Type: {{contentType}}
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
@@ -79,8 +101,9 @@ Cookie: {{adminLogin.response.headers.set-cookie}}
   "lastName": "MartinUpdated"
 }
 
+# 10. On peut changer le rôle d’un utilisateur.
 ### Change user role
-PATCH {{baseUrl}}/users/1/role
+PATCH {{baseUrl}}/users/2/role
 Content-Type: {{contentType}}
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
@@ -88,8 +111,9 @@ Cookie: {{adminLogin.response.headers.set-cookie}}
   "role": "LIBRARIAN"
 }
 
+# 11. On peut whitelist un utilisateur.
 ### Whitelist user ON
-PATCH {{baseUrl}}/users/1/whitelist
+PATCH {{baseUrl}}/users/2/whitelist
 Content-Type: {{contentType}}
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
@@ -97,6 +121,7 @@ Cookie: {{adminLogin.response.headers.set-cookie}}
   "whitelisted": true
 }
 
+# 12. Maintenant que l’utilisateur STUDENT est whitelisté, on peut retenter de se logguer avec.
 ### Login STUDENT (après whitelist) => doit réussir
 # @name studentLogin
 POST {{baseUrl}}/auth/login
@@ -107,23 +132,53 @@ Content-Type: {{contentType}}
   "password": "ChangeMe123!"
 }
 
+# 13. On peut faire des requêtes en tant que STUDENT.
 ### Me (student session)
 GET {{baseUrl}}/auth/me
 Cookie: {{studentLogin.response.headers.set-cookie}}
 
-### Delete user (attention: éviter de delete user 1 si c’est ton admin)
-DELETE {{baseUrl}}/users/999
+# 13.1. On se déloggue de la session STUDENT.
+### Logout (student session)
+POST {{baseUrl}}/auth/logout
+Cookie: {{studentLogin.response.headers.set-cookie}}
+
+# 13.2. On se reloggue avec l'utilisateur ADMIN pour la suite des tests.
+### Reconnexion ADMIN - Comme le 4.
+# @name adminLogin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "adimin@example.com",
+  "password": "ChangeMoi123!"
+}
+
+# 13.3. On créer un utilisateur ID 3, pour le delete après.
+### Register STUDENT (par défaut non admin et non whitelisté)
+# @name registerStudent
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "delete@example.com",
+  "password": "DeleteMe123!",
+  "firstName": "ToDelete",
+  "lastName": "ToDelete"
+}
+
+# 14. On peut delete un utilisateur.
+### Delete user (ID 3, pour ne pas effacer un utilisateur gênant.)
+DELETE {{baseUrl}}/users/3
 Cookie: {{adminLogin.response.headers.set-cookie}}
 
-# Les endpoints ne sont pas encore prêts, mais voici l'exemple des routes.
-
-####################################
+# Les livres ne sont pas entièrement terminé, mais voici les deux requests principales.
 # BOOKS (PUBLIC + LIBRARIAN/ADMIN)
-####################################
 
+# 15. On peut lister les livres (endpoint public).
 ### Get books (public)
 GET {{baseUrl}}/books?page=1&limit=10&sortBy=title&order=ASC
 
+# 16. On peut créer un livre (en tant que LIBRARIAN/ADMIN).
 ### Create book (librarian/admin)
 POST {{baseUrl}}/books
 Content-Type: {{contentType}}
@@ -137,3 +192,26 @@ Cookie: {{adminLogin.response.headers.set-cookie}}
   "publishedYear": 2008,
   "totalCopies": 3
 }
+
+# 16.1 On peut créer un nouveau livre pour tester la liste
+### Create book (librarian/admin)
+POST {{baseUrl}}/books
+Content-Type: {{contentType}}
+Cookie: {{adminLogin.response.headers.set-cookie}}
+
+{
+  "isbn": "9780132350856",
+  "title": "Ugly Code",
+  "author": "Martin Robert C.",
+  "publisher": "Hall Of Prentice",
+  "publishedYear": 2005,
+  "totalCopies": 1
+}
+
+# 16.2. On peut lister les livres à nouveau pour voir le livre créé.
+### Get books (public)
+GET {{baseUrl}}/books?page=1&limit=10&sortBy=title&order=ASC
+
+# 16.3. On peut voir le détail d’un livre.
+### Get book detail (public)
+GET {{baseUrl}}/books/2

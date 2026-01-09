@@ -7,6 +7,6 @@ import { SessionAuthGuard } from './guards/session-auth/session-auth.guard';
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
   providers: [RolesGuard, SessionAuthGuard],
-  exports: [RolesGuard, SessionAuthGuard],
+  exports: [TypeOrmModule, RolesGuard, SessionAuthGuard],
 })
 export class CommonModule {}
