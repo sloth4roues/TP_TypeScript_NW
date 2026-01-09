@@ -47,9 +47,11 @@ npm run start:dev
 ```
 
 ## Variables d'environnement
-Exemple minimal:
+Il faut impérativement créer son propre .env (qui peut être un copié collé exact du .env.example)
 
 Il faut modifier le "adimin@example.com" par l'adresse mail qui permettra la création d'un utilisateur ADMIN et Whitelisté, automatiquement.
+NOTE : Dans le requests.http actuel, les tests sont prévu pour cette adresse email, si l'on décide de la changer, il faut également changer les requêtes associées.
+
 ```env
 NODE_ENV=development
 PORT=3000
